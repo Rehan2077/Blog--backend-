@@ -1,10 +1,12 @@
 import express, { urlencoded } from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors"
 
 import userRouter from "./routes/user.js";
 import { errorMiddleware, invalidPathHandler } from "./middleware/error.js";
 
 export const app = express();
+app.use(cors());
 
 app.use(express.json());
 app.use(cookieParser());
