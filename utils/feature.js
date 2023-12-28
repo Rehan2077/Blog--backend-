@@ -13,5 +13,14 @@ export const sendCookies = (user, res, message, statusCode = 200) => {
     .json({
       success: true,
       message: message,
+      user: {
+        _id: user._id,
+        avatar: user.avatar,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+        admin: user.admin,
+        createdAt: user.createdAt,
+      },
     });
 };

@@ -21,6 +21,15 @@ export const register = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       message: "Registered successfully",
+      user: {
+        _id: user._id,
+        avatar: user.avatar,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+        admin: user.admin,
+        createdAt: user.createdAt,
+      },
     });
   } catch (error) {
     next(error);
@@ -39,7 +48,6 @@ export const login = async (req, res, next) => {
     if (!isMatched) return next(new Error("Incorrect Password!"));
 
     sendCookies(user, res, `Welcome back ${user.name}`, 201);
-    // console.log(user);
   } catch (error) {
     next(error);
   }
@@ -70,20 +78,44 @@ export const userProfile = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
-    let user = await User.findOne(req.user._id);
-    if (!user) return new Error("User not found, login first");
+    const { name, email, password, newpassword } = req.body;
+    let user = await User.findById(req.user._id);
+    if (!user) return next(new Error("User not found, login first"));
     user.name = name || user.name;
     user.email = email || user.email;
-    if (password && password.legth < 6)
-      return new Error("Password must be atleast 6 characters in length!");
-    else if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      user.password = hashedPassword || user.password;
+
+    if (password && newpassword) {
+      const isMatched = await bcrypt.compare(password, user.password);
+      if (!isMatched) return next(new Error("Incorrect current password"));
+      else if (newpassword && newpassword === password)
+        return next(
+          new Error("New password must be different from the current password")
+        );
+      else if (newpassword.length < 6)
+        return next(
+          new Error("Password must be atleast 6 characters in length!")
+        );
+      else if (password === newpassword) {
+        return next(new Error("Please enter a new password"));
+      } else if (newpassword) {
+        const newHashedPassword = await bcrypt.hash(newpassword, 10);
+        user.password = newHashedPassword || user.password;
+      }
     }
     const updatedUserProfile = await user.save();
-
-    res.json(updatedUserProfile);
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        _id: updatedUserProfile._id,
+        avatar: updatedUserProfile.avatar,
+        name: updatedUserProfile.name,
+        email: updatedUserProfile.email,
+        verified: updatedUserProfile.verified,
+        admin: updatedUserProfile.admin,
+        createdAt: updatedUserProfile.createdAt,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -114,7 +146,15 @@ export const updateProfilePicture = async (req, res, next) => {
           res.json({
             success: true,
             message: "Avatar removed successfully",
-            user,
+            user: {
+              _id: user._id,
+              avatar: user.avatar,
+              name: user.name,
+              email: user.email,
+              verified: user.verified,
+              admin: user.admin,
+              crea
+            },
           });
         }
       }
