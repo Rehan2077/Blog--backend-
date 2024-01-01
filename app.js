@@ -4,6 +4,8 @@ import cors from "cors"
 import path from "path";
 
 import userRouter from "./routes/user.js";
+import postRouter from "./routes/post.js";
+import commentRouter from "./routes/comment.js";
 import { errorMiddleware, invalidPathHandler } from "./middleware/error.js";
 
 export const app = express();
@@ -23,6 +25,8 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/posts", postRouter);
+app.use("/api/v1/comments", commentRouter);
 
 app.use(invalidPathHandler);
 app.use(errorMiddleware);

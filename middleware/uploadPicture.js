@@ -6,7 +6,6 @@ const storage = multer.diskStorage({
     cb(null, "./uploads");
   },
   filename: function (req, file, cb) {
-    console.log(file);
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
@@ -14,7 +13,7 @@ const storage = multer.diskStorage({
 export const uploadPicture = multer({
   storage,
   limits: {
-    fileSize: 1 * 1000000, // 1mb
+    fileSize: 10 * 1000000, // 10mb
   },
   fileFilter: (req, file, cb) => {
     let ext = path.extname(file.originalname);

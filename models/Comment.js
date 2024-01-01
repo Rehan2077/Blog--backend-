@@ -2,21 +2,21 @@ import mongoose, { Schema } from "mongoose";
 
 const commentSchema = new mongoose.Schema(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    author: { type: Schema.Types.ObjectId, ref: "Users", required: true },
     desc: { type: String, required: true },
-    postId: { type: Schema.Types.ObjectId, ref: "Post", required: true },
+    post: { type: Schema.Types.ObjectId, ref: "Posts", required: true },
     // likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     check: { type: Boolean, default: false },
-    parent: { type: Schema.Types.ObjectId, ref: "Comment", default: null },
-    replyOnUser: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    parent: { type: Schema.Types.ObjectId, ref: "Comments", default: null },
+    replyOnUser: { type: Schema.Types.ObjectId, ref: "Users", default: null },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }  }
 );
 
 commentSchema.virtual("replies", {
-  ref: "Comment",
+  ref: "Comments",
   localField: "_id",
   foreignField: "parent",
 });
 
-export const Comment = mongoose.model("Comment", commentSchema);
+export const Comment = mongoose.model("Comments", commentSchema);

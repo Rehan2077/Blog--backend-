@@ -7,11 +7,12 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true },
     password: { type: String, required: true },
     verified: { type: Boolean, default: false },
-    verificationCode: { type: String, default: false },
+    verificationCode: { type: String, default: null },
+    admin: { type: Boolean, default: false },
   },
   {
     timestamps: true,
   }
 );
 
-export const User = mongoose.model("users", userSchema);
+export const User = mongoose.model("Users", userSchema);

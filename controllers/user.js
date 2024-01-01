@@ -125,14 +125,15 @@ export const updateProfilePicture = async (req, res, next) => {
   try {
     const upload = uploadPicture.single("profilePicture");
     upload(req, res, async (error) => {
-      if (error) return next(new Error(""));
+      if (error) return next(new Error(error));
       else {
         console.log(req.file);
         if (req.file) {
           let user = req.user;
+          let filename = user.avatar;
+          if (filename) await fileRemover(filename);
           user.avatar = req.file.filename;
           await user.save();
-          fileRemover(req.file.filename);
           res.json({
             success: true,
             message: "Avatar added successfully",
@@ -140,9 +141,10 @@ export const updateProfilePicture = async (req, res, next) => {
           });
         } else {
           let user = req.user;
+          let filename = user.avatar;
+          await fileRemover(filename);
           user.avatar = "";
           await user.save();
-          fileRemover();
           res.json({
             success: true,
             message: "Avatar removed successfully",
@@ -153,7 +155,7 @@ export const updateProfilePicture = async (req, res, next) => {
               email: user.email,
               verified: user.verified,
               admin: user.admin,
-              crea
+              createdAt: user.createdAt,
             },
           });
         }

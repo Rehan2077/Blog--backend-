@@ -7,17 +7,18 @@ const postSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true },
     body: { type: Object, required: true },
     photo: { type: String, required: true },
-    author: { type: Schema.Types.ObjectId, ref: "User" },
+    views: { type: Number, default: 0 },
+    author: { type: Schema.Types.ObjectId, ref: "Users" },
     tags: { type: [String] },
     categories: { type: [Schema.Types.ObjectId], ref: "PostCategories" },
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }  }
 );
 
 postSchema.virtual("comments", {
-    ref: "Comment",
+    ref: "Comments",
     localField: "_id",
-    foreignField: "postId",
+    foreignField: "post",
 })
 
-export const Post = mongoose.model("Post", postSchema);
+export const Post = mongoose.model("Posts", postSchema);

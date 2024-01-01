@@ -8,7 +8,6 @@ import {
   userProfile,
 } from "../controllers/user.js";
 import { isAuthenticated } from "../middleware/auth.js";
-import { uploadPicture } from "../middleware/uploadPicture.js";
 
 const router = express.Router();
 
