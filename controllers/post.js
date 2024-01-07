@@ -180,16 +180,73 @@ export const getPost = async (req, res, next) => {
 
 export const getAllPosts = async (req, res, next) => {
   try {
-    const posts = await Post.find({}).populate([
-      { path: "author", select: ["name", "avatar", "verified"] },
-    ]);
-    if (!posts) return next(new Error("Posts not found"));
+    // To get all posts->
 
-    res.json({
-      success: true,
-      message: "Posts get successfully",
-      posts,
-    });
+    // const posts = await Post.find({}).populate([
+    //   { path: "author", select: ["name", "avatar", "verified"] },
+    // ]);
+    // if (!posts) return next(new Error("Posts not found"));
+
+    // res.json({
+    //   success: true,
+    //   message: "Posts get successfully",
+    //   posts,
+    // });
+
+    // Extract the search keyword from the request query
+    const filter = req.query.searchKeyword;
+
+    // Create an empty object to store the MongoDB query conditions
+    let where = {};
+
+    // Check if there's a search keyword, and if so, create a case-insensitive regex query
+    if (filter) {
+      where.title = { $regex: filter, $options: "i" };
+    }
+
+    // Create a MongoDB query to find posts based on the conditions in 'where'
+    let query = Post.find(where);
+
+    // Extract the page and page size parameters from the request query, default to 1 and 10, respectively
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = Math.max(1, parseInt(req.query.limit) || 10);
+
+    // Calculate the number of documents in the Post collection
+    const total = await Post.countDocuments();
+
+    // Calculate the total number of pages based on the page size
+    const pages = Math.ceil(total / pageSize);
+
+    // If the requested page is greater than the total number of pages, return an error
+    if (page > pages) {
+      // Here, 'next' is a function provided by Express to move to the next middleware
+      return next(new Error("No page found"));
+    }
+
+    // Calculate the number of documents to skip based on the page and page size
+    const skip = (page - 1) * pageSize;
+
+    // Execute the MongoDB query, applying skip, limit, and sorting by updatedAt in descending order
+    const result = await query
+      .skip(skip)
+      .limit(pageSize)
+      .populate([{ path: "author", select: ["name", "avatar", "verified"] }])
+      .sort({ updatedAt: "desc" });
+
+    // Set response headers with metadata about the query and send the results as a JSON response
+    res
+      .header({
+        "x-filter": filter,
+        "x-totalcount": JSON.stringify(total),
+        "x-currentpage": JSON.stringify(page),
+        "x-pagesize": JSON.stringify(pageSize),
+        "x-totalpagecount": JSON.stringify(pages),
+      })
+      .json({
+        success: true,
+        message: "Posts get successfully",
+        posts: result,
+      });
   } catch (error) {
     next(error);
   }
