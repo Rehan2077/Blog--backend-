@@ -165,12 +165,14 @@ export const getPost = async (req, res, next) => {
 
     if (!post) return next(new Error("Post not found"));
 
+    const totalComments = await Comment.countDocuments({ post: post._id });
     post.views = post.views + 1;
     await post.save();
 
     res.json({
       success: true,
       message: "Post get successfully",
+      totalComments,
       post,
     });
   } catch (error) {
@@ -212,15 +214,24 @@ export const getAllPosts = async (req, res, next) => {
     const pageSize = Math.max(1, parseInt(req.query.limit) || 10);
 
     // Calculate the number of documents in the Post collection
-    const total = await Post.countDocuments();
+    const total = await Post.find(where).countDocuments();
 
     // Calculate the total number of pages based on the page size
     const pages = Math.ceil(total / pageSize);
 
+    // Set response headers with metadata about the query
+    res.header({
+      "x-filter": filter,
+      "x-totalcount": JSON.stringify(total),
+      "x-currentpage": JSON.stringify(page),
+      "x-pagesize": JSON.stringify(pageSize),
+      "x-totalpagecount": JSON.stringify(pages),
+    });
+
     // If the requested page is greater than the total number of pages, return an error
     if (page > pages) {
       // Here, 'next' is a function provided by Express to move to the next middleware
-      return next(new Error("No page found"));
+      return res.json([]);
     }
 
     // Calculate the number of documents to skip based on the page and page size
@@ -233,20 +244,13 @@ export const getAllPosts = async (req, res, next) => {
       .populate([{ path: "author", select: ["name", "avatar", "verified"] }])
       .sort({ updatedAt: "desc" });
 
-    // Set response headers with metadata about the query and send the results as a JSON response
-    res
-      .header({
-        "x-filter": filter,
-        "x-totalcount": JSON.stringify(total),
-        "x-currentpage": JSON.stringify(page),
-        "x-pagesize": JSON.stringify(pageSize),
-        "x-totalpagecount": JSON.stringify(pages),
-      })
-      .json({
-        success: true,
-        message: "Posts get successfully",
-        posts: result,
-      });
+    // Send the results as a JSON response
+
+    res.json({
+      success: true,
+      message: "Posts get successfully",
+      posts: result,
+    });
   } catch (error) {
     next(error);
   }
