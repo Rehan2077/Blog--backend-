@@ -6,53 +6,46 @@ import { fileRemover } from "../utils/fileRemover.js";
 
 export const createPost = async (req, res, next) => {
   try {
-    const post = await Post.create({
-      title: "This is a sample post",
-      caption: "This is a sample caption",
-      slug: uuidv4(),
-      body: {
-        type: "doc",
-        content: [
-          {
-            type: "paragraph",
-            content: [
-              {
-                type: "text",
-                text: "Wow, this editor instance exports its content as JSON",
-              },
-            ],
-          },
-          {
-            type: "paragraph",
-            content: [
-              {
-                type: "text",
-                marks: [
-                  {
-                    type: "bold",
-                  },
-                  {
-                    type: "italic",
-                  },
-                ],
-                text: "this is a bold text",
-              },
-            ],
-          },
-        ],
-      },
-      photo: "1703845741983-facebook.png",
-      author: req.user._id,
-      tags: ["tag 1", "tag 2"],
-      categories: [],
-    });
+    
+    const upload = uploadPicture.single("postPicture");
 
-    await post.save();
+    let photo = "";
 
-    res.json({
-      success: true,
-      message: "Post created successfully",
-      post: post,
+    const handleCreatePostData = async (data) => {
+      const { body } = JSON.parse(data);
+
+      const post = await Post.create({
+        title: req.body.title || "This is a title",
+        caption: "This is a sample caption",
+        slug: uuidv4(),
+        body: body || "This is a body",
+        photo: photo || "this is photo",
+        author: req.user._id,
+        tags: ["tag 1", "tag 2"],
+        categories: [],
+      });
+
+      await post.save();
+
+      res.json({
+        success: true,
+        message: "Post created successfully",
+        post: post,
+      });
+    };
+
+    upload(req, res, async (error) => {
+      if (error) return next(new Error(error));
+      else {
+        // every thing went well
+        if (req.file) {
+          photo = req.file.filename;
+          handleCreatePostData(req.body.document);
+        } else {
+          photo = "Photo not provided";
+          handleCreatePostData(req.body.document);
+        }
+      }
     });
   } catch (error) {
     next(error);
@@ -95,15 +88,16 @@ export const updatePost = async (req, res, next) => {
           let filename;
           filename = post.photo;
           if (filename) {
-            fileRemover(filename);
+            try {
+              fileRemover(filename);
+            } catch (error) {
+              console.log(error);
+            }
           }
           post.photo = req.file.filename;
           handleUpdatePostData(req.body.document);
         } else {
-          let filename;
-          filename = post.photo;
-          post.photo = "";
-          fileRemover(filename);
+          post.photo = post.photo;
           handleUpdatePostData(req.body.document);
         }
       }
