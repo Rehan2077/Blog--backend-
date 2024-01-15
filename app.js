@@ -1,6 +1,6 @@
 import express, { urlencoded } from "express";
 import cookieParser from "cookie-parser";
-import cors from "cors"
+import cors from "cors";
 import path from "path";
 
 import userRouter from "./routes/user.js";
@@ -9,12 +9,17 @@ import commentRouter from "./routes/comment.js";
 import { errorMiddleware, invalidPathHandler } from "./middleware/error.js";
 
 export const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: [process.env.FRONTEND_URL],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
 // app.use(express.urlencoded({ extended: false }));
-
 
 // static access
 const __dirname = path.resolve();
