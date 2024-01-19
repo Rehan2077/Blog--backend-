@@ -1,6 +1,6 @@
 import { User } from "../models/User.js";
 import bcrypt from "bcrypt";
-import { sendCookies } from "../utils/feature.js";
+import { sendResponse } from "../utils/feature.js";
 import { uploadPicture } from "../middleware/uploadPicture.js";
 import { fileRemover } from "../utils/fileRemover.js";
 
@@ -18,19 +18,7 @@ export const register = async (req, res, next) => {
       email,
       password: hashedPassword,
     });
-    return res.status(201).json({
-      success: true,
-      message: "Registered successfully",
-      user: {
-        _id: user._id,
-        avatar: user.avatar,
-        name: user.name,
-        email: user.email,
-        verified: user.verified,
-        admin: user.admin,
-        createdAt: user.createdAt,
-      },
-    });
+    sendResponse(user, res, `Registered successfully`, 201);
   } catch (error) {
     next(error);
   }
@@ -47,34 +35,23 @@ export const login = async (req, res, next) => {
 
     if (!isMatched) return next(new Error("Incorrect Password!"));
 
-    sendCookies(user, res, `Welcome back ${user.name}`, 201);
+    sendResponse(user, res, `Welcome back ${user.name}`, 201);
   } catch (error) {
     next(error);
   }
 };
 
 export const logout = async (req, res, next) => {
-  res
-    .status(200)
-    .cookie("token", "", {
-      httpOnly: true,
-      expires: new Date(Date.now()),
-      sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",
-      secure: false,
-      // secure: process.env.NODE_ENV === "development" ? false : true,
-    })
-    .json({
-      success: true,
-      message: "Logout successful!",
-    });
+  res.status(200).json({
+    success: true,
+    message: "Logout successful!",
+  });
 };
 
 export const userProfile = async (req, res, next) => {
   try {
-    res.status(200).json({
-      success: true,
-      user: req.user,
-    });
+    let user = await User.findById(req.user._id);
+    sendResponse(user, res, `User Profile`, 200);
   } catch (error) {
     next(error);
   }
@@ -107,19 +84,7 @@ export const updateProfile = async (req, res, next) => {
       }
     }
     const updatedUserProfile = await user.save();
-    res.json({
-      success: true,
-      message: "Profile updated successfully",
-      user: {
-        _id: updatedUserProfile._id,
-        avatar: updatedUserProfile.avatar,
-        name: updatedUserProfile.name,
-        email: updatedUserProfile.email,
-        verified: updatedUserProfile.verified,
-        admin: updatedUserProfile.admin,
-        createdAt: updatedUserProfile.createdAt,
-      },
-    });
+    sendResponse(updatedUserProfile, res, `Profile updated successfully`, 200);
   } catch (error) {
     next(error);
   }
@@ -138,30 +103,14 @@ export const updateProfilePicture = async (req, res, next) => {
           if (filename) await fileRemover(filename);
           user.avatar = req.file.filename;
           await user.save();
-          res.json({
-            success: true,
-            message: "Avatar added successfully",
-            user,
-          });
+          sendResponse(user, res, `Avatar added successfully`, 200);
         } else {
           let user = req.user;
           let filename = user.avatar;
           await fileRemover(filename);
           user.avatar = "";
           await user.save();
-          res.json({
-            success: true,
-            message: "Avatar removed successfully",
-            user: {
-              _id: user._id,
-              avatar: user.avatar,
-              name: user.name,
-              email: user.email,
-              verified: user.verified,
-              admin: user.admin,
-              createdAt: user.createdAt,
-            },
-          });
+          sendResponse(user, res, `Avatar removed successfully`, 200);
         }
       }
     });

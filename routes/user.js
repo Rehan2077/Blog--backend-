@@ -15,7 +15,7 @@ router.post("/register", register);
 
 router.post("/login", login);
 
-router.get("/logout", isAuthenticated, logout);
+router.get("/logout", logout);
 
 router.get("/profile", isAuthenticated, userProfile);
 router.put("/updateProfile", isAuthenticated, updateProfile);

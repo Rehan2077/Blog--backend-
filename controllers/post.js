@@ -6,7 +6,6 @@ import { fileRemover } from "../utils/fileRemover.js";
 
 export const createPost = async (req, res, next) => {
   try {
-    
     const upload = uploadPicture.single("postPicture");
 
     let photo = "";
@@ -236,7 +235,7 @@ export const getAllPosts = async (req, res, next) => {
       .skip(skip)
       .limit(pageSize)
       .populate([{ path: "author", select: ["name", "avatar", "verified"] }])
-      .sort({ updatedAt: "desc" });
+      .sort({ createdAt: "desc" });
 
     // Send the results as a JSON response
 
