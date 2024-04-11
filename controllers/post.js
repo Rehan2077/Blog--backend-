@@ -15,13 +15,13 @@ export const createPost = async (req, res, next) => {
 
       const post = await Post.create({
         title: req.body.title || "This is a title",
-        caption: "This is a sample caption",
+        caption: req.body.caption || "This is a sample caption",
         slug: uuidv4(),
         body: body || "This is a body",
         photo: photo || "this is photo",
         author: req.user._id,
         tags: ["tag 1", "tag 2"],
-        categories: [],
+        categories: [req.body.category],
       });
 
       await post.save();
@@ -60,9 +60,11 @@ export const updatePost = async (req, res, next) => {
     const upload = uploadPicture.single("postPicture");
 
     const handleUpdatePostData = async (data) => {
-      console.log(data);
 
       const { title, caption, slug, body, tags, categories } = JSON.parse(data);
+
+      console.log(data);
+
       post.title = title || post.title;
       post.caption = caption || post.caption;
       post.slug = slug || post.slug;

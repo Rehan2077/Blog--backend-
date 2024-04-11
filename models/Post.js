@@ -10,7 +10,7 @@ const postSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     author: { type: Schema.Types.ObjectId, ref: "Users" },
     tags: { type: [String] },
-    categories: { type: [Schema.Types.ObjectId], ref: "PostCategories" },
+    categories: { type: [String], ref: "PostCategories" },
   },
   { timestamps: true, toJSON: { virtuals: true }  }
 );

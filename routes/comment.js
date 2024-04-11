@@ -1,13 +1,14 @@
 import express from "express";
 
 import { isAuthenticated } from "../middleware/auth.js";
-import { createComment, deleteComment, updateComment } from "../controllers/comment.js";
+import { createComment, deleteComment, getAllComments, updateComment } from "../controllers/comment.js";
 
 
 const router = express.Router();
 
 router
   .route("/")
+  .get(isAuthenticated, getAllComments)
   .post(isAuthenticated, createComment)
 
   router.route("/:commentId")

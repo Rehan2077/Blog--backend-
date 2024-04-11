@@ -1,4 +1,6 @@
 import { User } from "../models/User.js";
+import { Post } from "../models/Post.js";
+import { Comment } from "../models/Comment.js";
 import bcrypt from "bcrypt";
 import { sendResponse } from "../utils/feature.js";
 import { uploadPicture } from "../middleware/uploadPicture.js";
@@ -51,7 +53,19 @@ export const logout = async (req, res, next) => {
 export const userProfile = async (req, res, next) => {
   try {
     let user = await User.findById(req.user._id);
-    sendResponse(user, res, `User Profile`, 200);
+    const totalUserPosts = await Post.find({
+      author: req.user._id,
+    }).countDocuments();
+    const totalUserComments = await Comment.find({
+      author: req.user._id,
+    }).countDocuments();
+
+    sendResponse(
+      { ...user, totalUserPosts, totalUserComments },
+      res,
+      `User Profile`,
+      200
+    );
   } catch (error) {
     next(error);
   }
