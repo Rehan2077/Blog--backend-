@@ -3,20 +3,21 @@ import { Comment } from "../models/Comment.js";
 export const createComment = async (req, res, next) => {
   try {
     const { desc, post, parent, replyOnUser } = req.body;
-    const author = req.user._id;
+    const author = req.user;
     const comment = await Comment.create({
-      author,
+      author: author._id,
       desc,
       post,
       parent,
       replyOnUser,
+      check: author.admin || author.verified ? true : false,
     });
 
     const savedComment = await comment.save();
 
     res.json({
       success: true,
-      message: "Comment added successfully",
+      message: savedComment.check ? "Comment added successfully" : "Comment will appear after verification",
       comment: savedComment,
     });
   } catch (error) {
@@ -70,7 +71,6 @@ export const deleteComment = async (req, res, next) => {
 };
 
 export const getAllComments = async (req, res, next) => {
-  
   try {
     const { searchKeyword } = req.query;
 
