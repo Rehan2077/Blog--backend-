@@ -1,8 +1,10 @@
-import { uploadPicture } from "../middleware/uploadPicture.js";
-import { Post } from "../models/Post.js";
-import { Comment } from "../models/Comment.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { v4 as uuidv4 } from "uuid";
+import { uploadPicture } from "../middleware/uploadPicture.js";
+import { Comment } from "../models/Comment.js";
+import { Post } from "../models/Post.js";
 import { fileRemover } from "../utils/fileRemover.js";
+import { geminiResponseToJSON } from "../utils/geminiResponseToJson.js";
 
 export const createPost = async (req, res, next) => {
   try {
@@ -60,7 +62,6 @@ export const updatePost = async (req, res, next) => {
     const upload = uploadPicture.single("postPicture");
 
     const handleUpdatePostData = async (data) => {
-
       const { title, caption, slug, body, tags, categories } = JSON.parse(data);
 
       console.log(data);
@@ -246,6 +247,72 @@ export const getAllPosts = async (req, res, next) => {
       message: "Posts get successfully",
       posts: result,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const likePost = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+    const userId = req.user._id;
+
+    const post = await Post.findOne({ slug });
+
+    if (!post) return next(new Error("Post not found"));
+
+    const isLiked = post.likes.findIndex((like) => like.toString() == userId);
+
+    if (isLiked == -1) {
+      // like
+      post.likes.push(userId);
+    } else {
+      // dislike
+      post.likes.splice(isLiked, 1);
+    }
+
+    const updatedPost = await post.save();
+
+    res.json({
+      success: true,
+      message: isLiked == -1 ? "Post liked successfully" : null,
+      post: updatedPost,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generatePostContent = async (req, res, next) => {
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const genAI = new GoogleGenerativeAI(apiKey);
+
+    const geminiModel = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
+
+    const { title, description } = req.body;
+
+    if (title.length < 10) return next(new Error("Title is too short"));
+
+    const prompt = `Write a blog titled "${title}" with a short description and long easy to understand content which is engaging with readers.
+    And dont include words like "Here's a short description:" in the content. Make presentation good so that it can be directly pasted into textfield.
+    ${description ? `Here's a short description: ${description}` : ""}`;
+
+    const result = await geminiModel.generateContent(prompt);
+
+    const response = geminiResponseToJSON(result.response.text());
+
+    if (response) {
+      res.json({
+        success: true,
+        message: "Content generated successfully",
+        content: response,
+      });
+    } else {
+      next(new Error("Content generation failed"));
+    }
   } catch (error) {
     next(error);
   }

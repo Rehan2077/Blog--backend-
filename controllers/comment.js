@@ -80,7 +80,7 @@ export const getAllComments = async (req, res, next) => {
 
     const comments = await Comment.find(where)
       .populate([
-        { path: "author", select: ["name", "avatar"] },
+        { path: "author", select: ["name", "avatar", "verified"] },
         { path: "post", select: ["slug"] },
       ])
       .sort({ createdAt: "desc" });

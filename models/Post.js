@@ -8,6 +8,7 @@ const postSchema = new mongoose.Schema(
     body: { type: Object, required: true },
     photo: { type: String, required: true },
     views: { type: Number, default: 0 },
+    likes: { type: [Schema.Types.ObjectId], ref: "Users", default: [] },
     author: { type: Schema.Types.ObjectId, ref: "Users" },
     tags: { type: [String] },
     categories: { type: [String], ref: "PostCategories" },
